@@ -3,22 +3,135 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Halaman Koneksi GAS</title>
+    <title>Aplikasi Upload Foto</title>
     <style>
-        body, html {
-            margin: 0;
-            padding: 0;
-            height: 100%;
-            overflow: hidden; /* Menghilangkan scrollbar ganda */
-        }
-        iframe {
-            width: 100%;
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            text-align: center;
+            width: 100%;
+            max-width: 400px;
+        }
+        input[type="file"] {
+            margin: 20px 0;
+        }
+        button {
+            background-color: #2ea44f;
+            color: white;
             border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover {
+            background-color: #22863a;
+        }
+        button:disabled {
+            background-color: #94d3a2;
+            cursor: not-allowed;
+        }
+        #status {
+            margin-top: 15px;
+            font-size: 14px;
+            color: #555;
+        }
+        #result {
+            margin-top: 20px;
+            display: none;
+        }
+        #result img {
+            max-width: 100%;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        .url-box {
+            background: #eee;
+            padding: 8px;
+            border-radius: 4px;
+            word-break: break-all;
+            font-size: 12px;
+            margin-top: 10px;
         }
     </style>
 </head>
 <body>
-    <iframe src="https://script.google.com/macros/s/AKfycbygupXhjYW7Y7AWKIL2ERZgbM5NO_KIhDgEI47OMYNFxXxO2AnB4aBQ1YaoOQq1Wt_Z_A/exec"></iframe>
+
+<div class="container">
+    <h2>Upload Foto</h2>
+    <p>Pilih foto untuk diunggah (Max 32MB)</p>
+    
+    <input type="file" id="fileInput" accept="image/*">
+    <button id="uploadBtn" onclick="uploadImage()">Upload Sekarang</button>
+    
+    <div id="status"></div>
+
+    <div id="result">
+        <p><strong>Berhasil diupload!</strong></p>
+        <img id="uploadedImage" src="" alt="Preview">
+        <div class="url-box" id="imageUrl"></div>
+    </div>
+</div>
+
+<script>
+    // PERHATIAN: Masukkan API Key ImgBB Anda di bawah ini
+    const IMGBB_API_KEY = 'MASUKKAN_API_KEY_ANDA_DI_SINI'; 
+
+    async function uploadImage() {
+        const fileInput = document.getElementById('fileInput');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const statusText = document.getElementById('status');
+        const resultDiv = document.getElementById('result');
+        const uploadedImg = document.getElementById('uploadedImage');
+        const imageUrlBox = document.getElementById('imageUrl');
+
+        if (fileInput.files.length === 0) {
+            alert('Pilih foto terlebih dahulu!');
+            return;
+        }
+
+        const file = fileInput.files[0];
+        const formData = new FormData();
+        formData.append('image', file);
+
+        uploadBtn.disabled = true;
+        statusText.innerHTML = 'Sedang mengunggah... mohon tunggu.';
+        resultDiv.style.display = 'none';
+
+        try {
+            const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+                method: 'POST',
+                body: formData
+            });
+            
+            const data = await response.json();
+
+            if (data.success) {
+                statusText.innerHTML = '';
+                resultDiv.style.display = 'block';
+                uploadedImg.src = data.data.url;
+                imageUrlBox.innerHTML = `<a href="${data.data.url}" target="_blank">${data.data.url}</a>`;
+            } else {
+                statusText.innerHTML = '<span style="color:red;">Gagal mengunggah foto.</span>';
+            }
+        } catch (error) {
+            statusText.innerHTML = '<span style="color:red;">Terjadi kesalahan jaringan.</span>';
+        } finally {
+            uploadBtn.disabled = false;
+        }
+    }
+</script>
+
 </body>
 </html>
